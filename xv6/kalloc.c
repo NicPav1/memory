@@ -48,7 +48,7 @@ freerange(void *vstart, void *vend)
 {
   char *p;
   p = (char*)PGROUNDUP((uint)vstart);
-  for(; p + PGSIZE <= (char*)vend; p += PGSIZE)
+  for(; p + PGSIZE <= (char*)vend; p += 2*PGSIZE)
     kfree(p);
 }
 // Free the page of physical memory pointed at by v,

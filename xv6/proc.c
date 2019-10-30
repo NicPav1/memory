@@ -527,3 +527,10 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+int
+dump_physmem(int *frames, int *pids, int numframes) 
+{
+  
+  return 0;
+}
