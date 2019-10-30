@@ -12,6 +12,8 @@
 void freerange(void *vstart, void *vend);
 extern char end[]; // first address after kernel loaded from ELF file
                    // defined by the kernel linker script in kernel.ld
+int frames[16384];
+int pid[16384];
 
 struct run {
   struct run *next;
@@ -75,6 +77,8 @@ kfree(char *v)
     release(&kmem.lock);
 }
 
+  int i = 0; 
+  int startNum = 36351;
 // Allocate one 4096-byte page of physical memory.
 // Returns a pointer that the kernel can use.
 // Returns 0 if the memory cannot be allocated.
@@ -82,6 +86,7 @@ char*
 kalloc(void)
 {
   struct run *r;
+  //int i, startNum;
 
   if(kmem.use_lock)
     acquire(&kmem.lock);
@@ -90,6 +95,9 @@ kalloc(void)
     kmem.freelist = r->next;
   if(kmem.use_lock)
     release(&kmem.lock);
+  frames[i] = startNum;
+  i++;
+  startNum--;
   return (char*)r;
 }
 
