@@ -531,6 +531,5 @@ procdump(void)
 int
 dump_physmem(int *frames, int *pids, int numframes) 
 {
-  
-  return 0;
+  return dump_mem(frames, pids, numframes);
 }

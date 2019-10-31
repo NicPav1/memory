@@ -8,6 +8,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "spinlock.h"
+#include "proc.h"
 
 void freerange(void *vstart, void *vend);
 extern char end[]; // first address after kernel loaded from ELF file
@@ -36,6 +37,12 @@ kinit1(void *vstart, void *vend)
   initlock(&kmem.lock, "kmem");
   kmem.use_lock = 0;
   freerange(vstart, vend);
+  for (int i = 0; i < 16384; i++) {
+    frames[i] = -1;
+  }
+  for (int p = 0; p < 16384; p++) {
+    pid[p] = p;
+  }
 }
 
 void
@@ -77,8 +84,8 @@ kfree(char *v)
     release(&kmem.lock);
 }
 
-  int i = 0; 
-  int startNum = 36351;
+int z = 0; 
+int startNum = 581631;
 // Allocate one 4096-byte page of physical memory.
 // Returns a pointer that the kernel can use.
 // Returns 0 if the memory cannot be allocated.
@@ -86,7 +93,6 @@ char*
 kalloc(void)
 {
   struct run *r;
-  //int i, startNum;
 
   if(kmem.use_lock)
     acquire(&kmem.lock);
@@ -95,9 +101,24 @@ kalloc(void)
     kmem.freelist = r->next;
   if(kmem.use_lock)
     release(&kmem.lock);
-  frames[i] = startNum;
-  i++;
+  //frames[i] = startNum;
+  //i++;
   startNum--;
+  if(r) {
+    int shift = (V2P(r) >> 12);
+    frames[z++] = (int)shift;
+  }
   return (char*)r;
 }
 
+int
+dump_mem(int *f, int *p, int n) {
+  for (int j = 0; j < n; j++) {
+    //if (frames[j] != -1) {
+      f[j] = frames[j];
+      p[j] = pid[j];
+      //cprintf("%d", j);
+    //}
+  }
+  return 0;
+}

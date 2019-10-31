@@ -68,6 +68,7 @@ char*           kalloc(void);
 void            kfree(char*);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
+int             dump_mem(int*, int*, int);
 
 // kbd.c
 void            kbdintr(void);

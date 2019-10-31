@@ -97,9 +97,9 @@ sys_dump_physmem(void)
   int *pids;
   int numframes;
 
-  if (argptr(0, (void*)&frames, sizeof(int*)) < 0) return -1;
-  if (argptr(1, (void*)&pids, sizeof(int*)) < 0) return -1;
-  if (argint(0, &numframes) < 0) return -1;
-
+  if (argint(2, &numframes) < 0) return -1;
+  if (argptr(0, (void*)&frames, sizeof(int*)*numframes) < 0) return -1;
+  if (argptr(1, (void*)&pids, sizeof(int*)*numframes) < 0) return -1;
+  
   return dump_physmem(frames, pids, numframes);
 }
