@@ -41,7 +41,7 @@ kinit1(void *vstart, void *vend)
     frames[i] = -1;
   }
   for (int p = 0; p < 16384; p++) {
-    pid[p] = p;
+    pid[p] = -2;
   }
 }
 
@@ -85,7 +85,8 @@ kfree(char *v)
 }
 
 int z = 0; 
-int startNum = 581631;
+//int startNum = 57343; // Saw on Piazza and tests
+
 // Allocate one 4096-byte page of physical memory.
 // Returns a pointer that the kernel can use.
 // Returns 0 if the memory cannot be allocated.
@@ -99,14 +100,11 @@ kalloc(void)
   r = kmem.freelist;
   if(r)
     kmem.freelist = r->next;
-  if(kmem.use_lock)
+  if(kmem.use_lock) {
+    int shift = (uint)(V2P(r) >> 12 & 0xffff);
+    frames[z] = shift + 1;
+    z++;
     release(&kmem.lock);
-  //frames[i] = startNum;
-  //i++;
-  startNum--;
-  if(r) {
-    int shift = (V2P(r) >> 12);
-    frames[z++] = (int)shift;
   }
   return (char*)r;
 }
