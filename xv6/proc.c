@@ -91,7 +91,7 @@ found:
   release(&ptable.lock);
 
   // Allocate kernel stack.
-  if((p->kstack = kalloc()) == 0){
+  if((p->kstack = kalloc2(1)) == 0){ //CHANGED
     p->state = UNUSED;
     return 0;
   }

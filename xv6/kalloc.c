@@ -93,6 +93,30 @@ int z = 0;
 char*
 kalloc(void)
 {
+  int p = -2;
+  return kalloc2(p);
+
+  //struct run *r;
+
+  //if(kmem.use_lock)
+  //  acquire(&kmem.lock);
+  //r = kmem.freelist;
+  //if(r)
+  //  kmem.freelist = r->next;
+  //if(kmem.use_lock) {
+  //  int shift = (uint)(V2P(r) >> 12 & 0xffff);
+  //  frames[z] = shift + 1;
+    //pid[z] = myproc()->pid;
+  //  z++;
+  //  release(&kmem.lock);
+  //}
+  //return (char*)r;
+  
+  
+}
+
+char*
+kalloc2(int p) {
   struct run *r;
 
   if(kmem.use_lock)
@@ -103,6 +127,8 @@ kalloc(void)
   if(kmem.use_lock) {
     int shift = (uint)(V2P(r) >> 12 & 0xffff);
     frames[z] = shift + 1;
+    pid[z] = p;
+    //pid[z] = myproc()->pid;
     z++;
     release(&kmem.lock);
   }
