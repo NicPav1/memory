@@ -15,10 +15,13 @@ extern char end[]; // first address after kernel loaded from ELF file
                    // defined by the kernel linker script in kernel.ld
 int frames[16384];
 int pid[16384];
+int z = 0; 
 
 struct run {
   struct run *next;
 };
+
+struct run *processes[16384]; //ADDED for v2
 
 struct {
   struct spinlock lock;
@@ -41,7 +44,7 @@ kinit1(void *vstart, void *vend)
     frames[i] = -1;
   }
   for (int p = 0; p < 16384; p++) {
-    pid[p] = -2;
+    pid[p] = -2; //ADDED
   }
 }
 
@@ -57,7 +60,7 @@ freerange(void *vstart, void *vend)
 {
   char *p;
   p = (char*)PGROUNDUP((uint)vstart);
-  for(; p + PGSIZE <= (char*)vend; p += 2*PGSIZE)
+  for(; p + PGSIZE <= (char*)vend; p += PGSIZE) //CHANGED
     kfree(p);
 }
 // Free the page of physical memory pointed at by v,
@@ -80,12 +83,25 @@ kfree(char *v)
   r = (struct run*)v;
   r->next = kmem.freelist;
   kmem.freelist = r;
-  if(kmem.use_lock)
+  if(kmem.use_lock) {
+    for (int e = 0; e < 16384; e++) { //ADDED
+      if (frames[e] == (uint)(V2P(v) >> 12 & 0xffff)) {
+        for (int n = e; n < 16383; n++){
+          frames[n] = frames[n+1];
+          pid[n] = pid[n+1];
+          processes[n] = processes[n+1];
+        }
+        frames[16383] = - 1;
+        pid[16383] = -2;
+        //break;
+      }
+    } //END of ADDED
+    z--;
     release(&kmem.lock);
+  }
 }
 
-int z = 0; 
-//int startNum = 57343; // Saw on Piazza and tests
+
 
 // Allocate one 4096-byte page of physical memory.
 // Returns a pointer that the kernel can use.
@@ -95,54 +111,75 @@ kalloc(void)
 {
   int p = -2;
   return kalloc2(p);
-
-  //struct run *r;
-
-  //if(kmem.use_lock)
-  //  acquire(&kmem.lock);
-  //r = kmem.freelist;
-  //if(r)
-  //  kmem.freelist = r->next;
-  //if(kmem.use_lock) {
-  //  int shift = (uint)(V2P(r) >> 12 & 0xffff);
-  //  frames[z] = shift + 1;
-    //pid[z] = myproc()->pid;
-  //  z++;
-  //  release(&kmem.lock);
-  //}
-  //return (char*)r;
-  
   
 }
 
 char*
 kalloc2(int p) {
   struct run *r;
-
+  struct run *rr;
+  int rrr = 0;
+  
   if(kmem.use_lock)
     acquire(&kmem.lock);
   r = kmem.freelist;
-  if(r)
+  if(r) 
     kmem.freelist = r->next;
   if(kmem.use_lock) {
     int shift = (uint)(V2P(r) >> 12 & 0xffff);
-    frames[z] = shift + 1;
-    pid[z] = p;
-    //pid[z] = myproc()->pid;
-    z++;
+    if (z != 0) {
+      if (pid[z-1] == p || p == -2 || pid[z-1] == -2) {
+        frames[z] = shift;
+        processes[z] = r;
+        pid[z] = p;
+        z++;
+      }
+      else if (pid[z-1] != p){
+        rr = kmem.freelist;
+        if (rr)
+          kmem.freelist = rr->next;
+        frames[z] =  (uint)(V2P(rr) >> 12 & 0xffff);
+        processes[z] = rr;
+        pid[z] = p;
+        z++;
+        rrr = 1;
+      }
+    }
+    else {
+      frames[z] = shift;
+      processes[z] = r;
+      pid[z] = p;
+      z++;
+    }
+    
     release(&kmem.lock);
   }
-  return (char*)r;
+  if (rrr == 1) return (char*)rr;
+  else return (char*)r;
 }
 
 int
 dump_mem(int *f, int *p, int n) {
+  for (int u = 0; u < 16384; u++)                     //Loop for ascending ordering
+	{
+		for (int v = 0; v < 16384; v++)             //Loop for comparing other values
+		{
+			if (frames[v] < frames[u])                //Comparing other array elements
+			{
+				int tmpf = frames[u];
+        int tmpp = pid[u];         //Using temporary variable for storing last value
+				frames[u] = frames[v];            //replacing value
+        pid[u] = pid[v];
+				frames[v] = tmpf;             //storing last value
+        pid[v] = tmpp;
+			}  
+		}
+	}
   for (int j = 0; j < n; j++) {
-    //if (frames[j] != -1) {
+    if (frames[j] != -1) {
       f[j] = frames[j];
       p[j] = pid[j];
-      //cprintf("%d", j);
-    //}
+    }
   }
   return 0;
 }

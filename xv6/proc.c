@@ -64,7 +64,7 @@ myproc(void) {
   popcli();
   return p;
 }
-
+int passing = 1; //ADDED
 // Look in the process table for an UNUSED proc.
 // If found, change state to EMBRYO and initialize
 // state required to run in the kernel.
@@ -91,7 +91,7 @@ found:
   release(&ptable.lock);
 
   // Allocate kernel stack.
-  if((p->kstack = kalloc2(1)) == 0){ //CHANGED
+  if((p->kstack = kalloc2(passing)) == 0){ //CHANGED
     p->state = UNUSED;
     return 0;
   }
@@ -172,6 +172,8 @@ growproc(int n)
   return 0;
 }
 
+
+
 // Create a new process copying p as the parent.
 // Sets up stack to return as if from system call.
 // Caller must set state of returned proc to RUNNABLE.
@@ -181,7 +183,7 @@ fork(void)
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
-
+  passing = myproc()->pid; //ADDED
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
